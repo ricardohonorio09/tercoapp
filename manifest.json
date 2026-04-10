@@ -1,0 +1,27 @@
+{
+  "name": "O Terço — Oração Católica",
+  "short_name": "O Terço",
+  "description": "Guia completo para rezar o Santo Rosário de Nossa Senhora",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf8f0",
+  "theme_color": "#b5873a",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "religion", "utilities"],
+  "screenshots": []
+}

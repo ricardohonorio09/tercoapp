@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#b5873a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="O Terço"/>
+<title>O Terço — Oração Católica</title>
+<link rel="manifest" href="manifest.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#b5873a;--gold-l:#d4a855;--gold-p:#f0ddb0;--cream:#fdf8f0;--text:#1e0f00;--muted:#7a5a30}
+@media(prefers-color-scheme:dark){:root{--cream:#120c02;--text:#f0dfc0;--muted:#c09050}}
+html,body{width:100%;height:100%;background:var(--cream)}
+body{font-family:'EB Garamond',Georgia,serif;color:var(--text);display:flex;flex-direction:column;align-items:center;overflow:hidden}
+
+/* TOP BAR */
+#topbar{width:100%;max-width:480px;flex-shrink:0;padding:max(env(safe-area-inset-top),10px) 14px 0;text-align:center;position:relative;z-index:10}
+#topbar h1{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--gold);letter-spacing:3px;margin-bottom:1px}
+#topbar .tag{font-size:12px;color:var(--muted);font-style:italic;margin-bottom:4px}
+#progress-wrap{display:none;padding:3px 2px 4px}
+#progress-meta{display:flex;justify-content:space-between;font-size:13px;color:var(--text);margin-bottom:3px;font-style:italic}
+#progress-bar{height:5px;background:var(--gold-p);border-radius:3px;overflow:hidden}
+#progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s ease}
+#bead-label{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:1.5px;text-align:center;min-height:16px;margin-top:2px}
+
+/* HAMBURGER BUTTON */
+#menu-btn{position:absolute;top:max(env(safe-area-inset-top),8px);left:12px;width:40px;height:40px;border-radius:50%;background:transparent;border:1.5px solid var(--gold);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;z-index:300;transition:background .2s;padding:0}
+#menu-btn:hover{background:rgba(181,135,58,.12)}
+#menu-btn span{display:block;width:18px;height:2px;background:var(--gold);border-radius:2px;transition:all .28s}
+#menu-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+#menu-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+#menu-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* OVERLAY */
+#menu-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:250;display:none}
+
+/* DRAWER */
+#menu-drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,85vw);background:var(--cream);z-index:260;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:4px 0 24px rgba(0,0,0,.2)}
+#menu-drawer.open{transform:translateX(0)}
+#menu-header{display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top),16px) 16px 12px;border-bottom:1px solid var(--gold-p);flex-shrink:0}
+#menu-header h2{font-family:'Cinzel',serif;font-size:15px;font-weight:600;color:var(--gold);letter-spacing:2px}
+#menu-close{width:32px;height:32px;border-radius:50%;background:transparent;border:1px solid var(--gold-p);cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all .18s}
+#menu-close:hover{background:var(--gold);color:white;border-color:var(--gold)}
+#menu-list{flex:1;overflow-y:auto;padding:6px 0}
+#menu-list::-webkit-scrollbar{width:3px}
+#menu-list::-webkit-scrollbar-thumb{background:var(--gold-p);border-radius:2px}
+.menu-sec{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--muted);padding:10px 16px 4px;text-transform:uppercase}
+.menu-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background .15s;border:none;background:transparent;width:100%;text-align:left}
+.menu-item:hover,.menu-item:active{background:rgba(181,135,58,.1)}
+.mi-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.mi-label{font-family:'EB Garamond',serif;font-size:16px;color:var(--text);flex:1;line-height:1.3}
+.mi-sub{font-size:11px;color:var(--muted);font-style:italic;display:block}
+.menu-div{height:1px;background:var(--gold-p);margin:3px 16px}
+
+/* PRAYER BOTTOM SHEET */
+#prayer-modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:280;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;display:none}
+#prayer-sheet{background:var(--cream);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;padding-bottom:max(env(safe-area-inset-bottom),12px)}
+#ps-handle{width:40px;height:4px;border-radius:2px;background:var(--gold-p);margin:10px auto 4px;flex-shrink:0}
+#ps-header{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 10px;border-bottom:1px solid var(--gold-p);flex-shrink:0}
+#ps-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:1.5px;font-weight:600}
+#ps-close{font-size:18px;color:var(--muted);cursor:pointer;background:none;border:none;padding:4px 8px}
+#ps-body{overflow-y:auto;padding:16px 20px 6px;flex:1}
+#ps-text{font-family:'EB Garamond',serif;font-size:18px;line-height:2.0;color:var(--text);font-style:italic}
+#ps-footer{padding:8px 18px 4px;display:flex;gap:10px;align-items:center;border-top:1px solid var(--gold-p);flex-shrink:0}
+#ps-play{font-family:'Cinzel',serif;font-size:12px;padding:8px 18px;border-radius:20px;border:1.5px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer}
+#ps-play:hover{background:var(--gold);color:#fff}
+#ps-spd{font-family:'Cinzel',serif;font-size:11px;padding:6px 10px;border-radius:14px;border:1px solid var(--gold-p);background:transparent;color:var(--muted);cursor:pointer}
+
+/* ROSARY AREA */
+#rosary-wrap{width:100%;max-width:480px;flex:1;min-height:0;overflow:hidden}
+#rosary-svg{width:100%;height:100%;display:block;touch-action:manipulation}
+
+/* BOTTOM BAR */
+#bottombar{width:100%;max-width:480px;flex-shrink:0;padding:5px 16px max(env(safe-area-inset-bottom),8px);display:none;flex-direction:column;gap:6px;align-items:center;background:var(--cream);z-index:10}
+#audio-row{display:flex;gap:8px;justify-content:center;align-items:center;width:100%}
+#nav-row{display:flex;gap:8px;justify-content:center;width:100%}
+#bottombar button{font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;padding:9px 20px;border-radius:24px;cursor:pointer;border:1.5px solid var(--gold);background:transparent;color:var(--gold);transition:all .18s;white-space:nowrap}
+#bottombar button:hover{background:var(--gold);color:#fff}
+#bottombar button:active{transform:scale(.96)}
+#bottombar button.primary{background:var(--gold);color:#fff;font-size:14px;padding:10px 26px}
+#bottombar button.primary:hover{background:var(--gold-l);border-color:var(--gold-l)}
+
+/* CHOOSE SCREEN */
+#choose-screen{width:100%;max-width:480px;flex:1;overflow-y:auto;padding:6px 14px 0;min-height:0;display:none}
+.choose-intro{text-align:center;font-size:16px;line-height:1.85;color:var(--text);font-style:italic;margin-bottom:10px}
+.mystery-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.mystery-card{background:rgba(181,135,58,.08);border:2px solid var(--gold-p);border-radius:12px;padding:12px 8px;cursor:pointer;transition:all .2s;text-align:center}
+.mystery-card.selected,.mystery-card:hover{border-color:var(--gold);background:rgba(181,135,58,.15)}
+.mc-icon{font-size:22px;margin-bottom:5px}
+.mc-name{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:3px}
+.mc-days{font-size:11px;color:var(--muted);font-style:italic}
+.mc-today{font-size:10px;color:var(--gold);font-family:'Cinzel',serif;letter-spacing:1px;margin-top:2px}
+.notif-row{display:flex;align-items:center;justify-content:space-between;background:rgba(181,135,58,.06);border:1px solid var(--gold-p);border-radius:10px;padding:10px 12px;margin-bottom:7px}
+.notif-label{font-size:14px;color:var(--text)}
+.notif-label small{display:block;font-size:11px;color:var(--muted);font-style:italic}
+.toggle{position:relative;width:48px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--gold-p);border-radius:26px;cursor:pointer;transition:background .2s}
+.toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle input:checked+.toggle-slider{background:var(--gold)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(22px)}
+.time-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(181,135,58,.06);border:1px solid var(--gold-p);border-radius:10px;margin-bottom:7px}
+.time-row label{font-size:14px;color:var(--text);flex:1}
+.time-row input[type=time]{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);background:transparent;border:1px solid var(--gold);border-radius:6px;padding:3px 7px;outline:none}
+.divider{display:flex;align-items:center;gap:10px;margin:7px 0;color:var(--muted);font-size:11px;letter-spacing:2px}
+.divider::before,.divider::after{content:'';flex:1;height:.5px;background:var(--gold);opacity:.4}
+.history-list{list-style:none}
+.history-list li{font-size:13px;color:var(--text);font-style:italic;padding:4px 0;border-bottom:.5px solid var(--gold-p)}
+
+/* BEAD POPUP */
+#bead-popup{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;background:var(--cream);border:1.5px solid var(--gold);border-radius:12px;padding:10px 16px;max-width:290px;width:88%;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:50;display:none;text-align:center}
+#bead-popup .pop-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:1.5px;margin-bottom:5px}
+#bead-popup .pop-text{font-size:15px;color:var(--text);font-style:italic;line-height:1.65}
+#bead-popup .pop-close{margin-top:8px;font-size:11px;color:var(--muted);cursor:pointer;font-style:italic}
+
+/* COMPLETE */
+#complete-screen{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 18px;flex:1;width:100%;max-width:480px;overflow-y:auto}
+.complete-cross{font-size:52px;color:var(--gold);animation:bless 2s ease infinite}
+@keyframes bless{0%,100%{text-shadow:0 0 10px rgba(181,135,58,.3)}50%{text-shadow:0 0 28px rgba(181,135,58,.9)}}
+.complete-title{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);margin:8px 0;letter-spacing:2px}
+.complete-text{font-size:18px;line-height:1.9;color:var(--text);font-style:italic;max-width:300px;margin:0 auto 18px}
+
+/* INSTALL BANNER */
+#install-banner{position:fixed;bottom:0;left:0;right:0;background:var(--cream);border-top:1px solid var(--gold);padding:10px 14px;display:flex;align-items:center;gap:8px;z-index:200}
+#install-banner p{flex:1;font-size:13px;color:var(--text)}
+#install-banner p small{display:block;font-size:10px;color:var(--muted)}
+.inst-btn{font-family:'Cinzel',serif;font-size:11px;padding:7px 12px;border-radius:8px;cursor:pointer;border:1.5px solid var(--gold);background:transparent;color:var(--gold)}
+.inst-btn.primary{background:var(--gold);color:#fff}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <button id="menu-btn" aria-label="Menu de orações">
+    <span></span><span></span><span></span>
+  </button>
+  <h1>✝ O TERÇO</h1>
+  <p class="tag">Oração do Rosário de Nossa Senhora</p>
+  <div id="progress-wrap">
+    <div id="progress-meta"><span id="pm-name"></span><span id="pm-pct"></span></div>
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+    <div id="bead-label"></div>
+  </div>
+</div>
+
+<div id="choose-screen"></div>
+<div id="rosary-wrap" style="display:none"><svg id="rosary-svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div id="complete-screen">
+  <span class="complete-cross">✝</span>
+  <div class="complete-title">TERÇO CONCLUÍDO</div>
+  <p class="complete-text" id="complete-text"></p>
+</div>
+<div id="bottombar"></div>
+
+<div id="bead-popup">
+  <div class="pop-title" id="pop-title"></div>
+  <div class="pop-text" id="pop-text"></div>
+  <div class="pop-close" onclick="closePopup()">✕ fechar</div>
+</div>
+
+<!-- MENU OVERLAY + DRAWER -->
+<div id="menu-overlay"></div>
+<div id="menu-drawer">
+  <div id="menu-header">
+    <h2>✝ ORAÇÕES</h2>
+    <button id="menu-close">✕</button>
+  </div>
+  <div id="menu-list">
+    <div class="menu-sec">Orações Básicas</div>
+    <button class="menu-item" onclick="openPrayer('pai_nosso')"><span class="mi-icon">🙏</span><span class="mi-label">Pai Nosso</span></button>
+    <button class="menu-item" onclick="openPrayer('ave_maria')"><span class="mi-icon">🌹</span><span class="mi-label">Ave Maria</span></button>
+    <button class="menu-item" onclick="openPrayer('gloria')"><span class="mi-icon">✨</span><span class="mi-label">Glória ao Pai</span></button>
+    <button class="menu-item" onclick="openPrayer('credo')"><span class="mi-icon">✝</span><span class="mi-label">Creio em Deus<span class="mi-sub">Credo Apostólico</span></span></button>
+    <button class="menu-item" onclick="openPrayer('salve')"><span class="mi-icon">👑</span><span class="mi-label">Salve Rainha</span></button>
+    <button class="menu-item" onclick="openPrayer('confiteor')"><span class="mi-icon">🕊️</span><span class="mi-label">Confiteor<span class="mi-sub">Confesso a Deus</span></span></button>
+    <div class="menu-div"></div>
+    <div class="menu-sec">Anjos e Santos</div>
+    <button class="menu-item" onclick="openPrayer('santo_anjo')"><span class="mi-icon">😇</span><span class="mi-label">Santo Anjo do Senhor</span></button>
+    <button class="menu-item" onclick="openPrayer('sao_bento')"><span class="mi-icon">⚔️</span><span class="mi-label">Oração de São Bento</span></button>
+    <button class="menu-item" onclick="openPrayer('medalha_bento')"><span class="mi-icon">🏅</span><span class="mi-label">Medalha de São Bento<span class="mi-sub">A Cruz Sagrada seja minha luz</span></span></button>
+    <button class="menu-item" onclick="openPrayer('sao_miguel')"><span class="mi-icon">🛡️</span><span class="mi-label">São Miguel Arcanjo</span></button>
+    <div class="menu-div"></div>
+    <div class="menu-sec">Proteção e Libertação</div>
+    <button class="menu-item" onclick="openPrayer('protecao')"><span class="mi-icon">🔰</span><span class="mi-label">Proteção e Liberação</span></button>
+    <div class="menu-div"></div>
+    <div class="menu-sec">Causas Impossíveis</div>
+    <button class="menu-item" onclick="openPrayer('santo_expedito')"><span class="mi-icon">⚡</span><span class="mi-label">Santo Expedito<span class="mi-sub">Causas urgentes</span></span></button>
+    <button class="menu-item" onclick="openPrayer('santa_rita')"><span class="mi-icon">🌸</span><span class="mi-label">Santa Rita de Cássia<span class="mi-sub">Causas impossíveis</span></span></button>
+    <button class="menu-item" onclick="openPrayer('sao_judas')"><span class="mi-icon">🕯️</span><span class="mi-label">São Judas Tadeu<span class="mi-sub">Causas desesperadas</span></span></button>
+    <div class="menu-div"></div>
+    <div class="menu-sec">Cura e Paz</div>
+    <button class="menu-item" onclick="openPrayer('cura')"><span class="mi-icon">💚</span><span class="mi-label">Cura Espiritual</span></button>
+    <button class="menu-item" onclick="openPrayer('dormir')"><span class="mi-icon">🌙</span><span class="mi-label">Oração para Dormir em Paz</span></button>
+    <div class="menu-div"></div>
+    <div class="menu-sec">Graças e Bênçãos</div>
+    <button class="menu-item" onclick="openPrayer('prosperidade')"><span class="mi-icon">🌾</span><span class="mi-label">Oração para Prosperidade</span></button>
+    <div style="height:16px"></div>
+  </div>
+</div>
+
+<!-- PRAYER BOTTOM SHEET -->
+<div id="prayer-modal">
+  <div id="prayer-sheet">
+    <div id="ps-handle"></div>
+    <div id="ps-header">
+      <span id="ps-title"></span>
+      <button id="ps-close">✕</button>
+    </div>
+    <div id="ps-body"><p id="ps-text"></p></div>
+    <div id="ps-footer">
+      <button id="ps-play">▶ Ouvir</button>
+      <button id="ps-spd">0.85x</button>
+    </div>
+  </div>
+</div>
+
+<div id="install-banner" style="display:none">
+  <p>Instale o aplicativo<small>Use offline, sem internet</small></p>
+  <button class="inst-btn primary" id="install-btn">Instalar</button>
+  <button class="inst-btn" id="dismiss-btn">✕</button>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const MIST={
+  gozosos:{nome:'Mistérios Gozosos',icon:'🌸',dias:'Segunda e Sábado',lista:['A Anunciação do Anjo Gabriel a Maria Santíssima','A Visitação de Nossa Senhora a Santa Isabel','O Nascimento de Jesus em Belém','A Apresentação do Menino Jesus no Templo','O Menino Jesus Perdido e Encontrado no Templo']},
+  dolorosos:{nome:'Mistérios Dolorosos',icon:'🌹',dias:'Terça e Sexta',lista:['A Agonia de Jesus no Horto das Oliveiras','A Flagelação de Jesus na Coluna','A Coroação de Espinhos','Jesus Carrega a Cruz até o Calvário','A Crucificação e Morte de Nosso Senhor Jesus Cristo']},
+  gloriosos:{nome:'Mistérios Gloriosos',icon:'✨',dias:'Quarta e Domingo',lista:['A Ressurreição de Jesus Cristo','A Ascensão de Jesus ao Céu','A Vinda do Espírito Santo sobre os Apóstolos','A Assunção de Nossa Senhora ao Céu','A Coroação de Maria como Rainha do Céu e da Terra']},
+  luminosos:{nome:'Mistérios Luminosos',icon:'☀️',dias:'Quinta',lista:['O Batismo de Jesus no Rio Jordão','O Milagre de Jesus nas Bodas de Caná','O Anúncio do Reino de Deus e o Chamado à Conversão','A Transfiguração de Jesus no Monte Tabor','A Instituição da Eucaristia na Última Ceia']}
+};
+const PR={
+  credo:{title:'Creio em Deus',full:'Creio em Deus Pai todo-poderoso, criador do céu e da terra; e em Jesus Cristo, seu único Filho, Nosso Senhor; que foi concebido pelo poder do Espírito Santo; nasceu da Virgem Maria; padeceu sob Pôncio Pilatos; foi crucificado, morto e sepultado; desceu à mansão dos mortos; ressuscitou ao terceiro dia; subiu aos céus; está sentado à direita de Deus Pai todo-poderoso; donde há de vir a julgar os vivos e os mortos. Creio no Espírito Santo; na santa Igreja Católica; na comunhão dos santos; na remissão dos pecados; na ressurreição da carne; na vida eterna. Amém.'},
+  pai_nosso:{title:'Pai Nosso',full:'Pai nosso que estais nos céus, santificado seja o vosso nome, venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas, assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cair em tentação, mas livrai-nos do mal. Amém.'},
+  ave_maria:{title:'Ave Maria',full:'Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora de nossa morte. Amém.'},
+  gloria:{title:'Glória ao Pai',full:'Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre, pelos séculos dos séculos. Amém.'},
+  fatima:{title:'Oração de Fátima',full:'Ó meu Jesus, perdoai-nos e livrai-nos do fogo do inferno. Levai as almas todas para o Céu, principalmente as que mais precisarem da vossa misericórdia. Amém.'},
+  salve:{title:'Salve Rainha',full:'Salve Rainha, Mãe de misericórdia, vida, doçura e esperança nossa, Salve! A vós bradamos os degredados filhos de Eva; a vós suspiramos gemendo e chorando neste vale de lágrimas. Eia pois, advogada nossa, esses vossos olhos misericordiosos a nós voltai; e depois deste desterro, mostrai-nos Jesus, o bendito fruto do vosso ventre. Ó clemente, ó piedosa, ó doce sempre Virgem Maria! Rogai por nós, Santa Mãe de Deus, para que sejamos dignos das promessas de Cristo. Amém.'}
+};
+const PRAYERSDB={
+  pai_nosso:{title:'Pai Nosso',text:PR.pai_nosso.full},
+  ave_maria:{title:'Ave Maria',text:PR.ave_maria.full},
+  gloria:{title:'Glória ao Pai',text:PR.gloria.full},
+  credo:{title:'Creio em Deus — Credo Apostólico',text:PR.credo.full},
+  salve:{title:'Salve Rainha',text:PR.salve.full},
+  confiteor:{title:'Confiteor — Confesso a Deus',text:'Confesso a Deus todo-poderoso, à bem-aventurada sempre Virgem Maria, ao bem-aventurado São Miguel Arcanjo, ao bem-aventurado São João Batista, aos santos Apóstolos Pedro e Paulo, a todos os santos e a vós, irmãos, que pequei muitas vezes por pensamentos, palavras, atos e omissões, por minha culpa, minha culpa, minha máxima culpa. Por isso suplico à bem-aventurada sempre Virgem Maria, ao bem-aventurado São Miguel Arcanjo, ao bem-aventurado São João Batista, aos santos Apóstolos Pedro e Paulo, a todos os santos e a vós, irmãos, que rogueis por mim a Deus Nosso Senhor. Amém.'},
+  santo_anjo:{title:'Santo Anjo do Senhor',text:'Santo Anjo do Senhor, meu zeloso guardador, se a ti me confiou a piedade divina, sempre me rege, guarda, governa e ilumina. Amém.\n\nAnjo de Deus, que és meu guardião, ilumina, guarda, rege e governa a mim, que fui confiado a ti pela piedade celestial. Amém.'},
+  medalha_bento:{title:'Medalha de São Bento',text:'A Cruz Sagrada seja a minha luz,\nnão seja o dragão o meu guia.\nRetira-te, satanás!\nNunca me aconselhes coisas vãs.\nÉ mau o que tu me ofereces,\nbebe tu mesmo do teu próprio veneno.\nEm nome do Pai e do Filho e do Espírito Santo. Amém!'},
+  sao_bento:{title:'Oração de São Bento',text:'Ó glorioso São Bento, que a tua regra de vida serviu de modelo a tantos monges e a tantos cristãos no mundo inteiro, intercede por nós junto a Deus para que possamos superar as tentações do mal e permanecer firmes na fé. Que a tua santa medalha seja para nós proteção contra o inimigo, força nas tribulações e caminho para a santidade. Pela tua intercessão, afasta de nós todo mal do corpo e da alma, e obtém-nos a graça de viver e morrer na paz de Cristo. Amém.'},
+  sao_miguel:{title:'Oração a São Miguel Arcanjo',text:'São Miguel Arcanjo, defendei-nos no combate, sede o nosso refúgio contra as maldades e ciladas do demônio. Que Deus sobre ele impere, humildemente o pedimos, e vós, Príncipe da Milícia Celestial, pelo poder divino precipitai no inferno a Satanás e aos outros espíritos malignos, que andam pelo mundo para perder as almas. Amém.'},
+  protecao:{title:'Proteção e Liberação',text:'Senhor Jesus Cristo, que derramaste o Teu precioso Sangue para nos resgatar do poder do pecado e do mal, vem em meu socorro neste momento. Pelo poder do Teu Santo Nome, livra-me de todo espírito de medo, angústia, opressão e escravidão. Que o Teu Sangue precioso forme uma barreira de proteção ao meu redor, à minha família e ao meu lar. Senhor, envia o Teu Santo Espírito para renovar em mim a força, a paz e a alegria. Maria Santíssima, cobri-me com o vosso manto de proteção. Todos os Santos Anjos, guardai-me de todo o mal. Amém.'},
+  santo_expedito:{title:'Oração a Santo Expedito',text:'Ó glorioso Santo Expedito, soldado intrépido de Cristo, que durante a tua vida preferiste o "hoje" ao "amanhã" e por isso alcançaste a glória eterna: intercedei junto a Deus por minha causa urgente e necessária. Tu que és o protetor das causas justas e urgentes, apresenta ao Senhor o meu pedido, para que a Sua misericórdia e justiça sejam derramadas sobre mim. Obtende-me a graça de que necessito com toda a urgência. Amém.'},
+  santa_rita:{title:'Oração a Santa Rita de Cássia',text:'Ó gloriosa Santa Rita, advogada das causas impossíveis e desesperadas, tu que participaste tão intimamente dos sofrimentos da Paixão de Nosso Senhor Jesus Cristo, e que possuis tão grande poder junto ao Divino Coração de Jesus, lança o teu olhar compassivo sobre minha angústia e desespero. Apresenta ao Senhor minha causa que considero impossível e intercede junto a Ele para que me conceda a graça de que tanto necessito. Santa Rita, rogai por nós! Amém.'},
+  sao_judas:{title:'Oração a São Judas Tadeu',text:'Ó glorioso Apóstolo São Judas Tadeu, servo fiel e amigo de Jesus, a Igreja te honra e invoca como o padroeiro das causas difíceis e desesperadas. Roga por mim que estou tão desamparado. Faz uso, te imploro, deste privilégio particular que te foi concedido de trazer auxílio visível e pronto quando quase se perdeu toda a esperança. Vem em meu auxílio nesta grande necessidade. Prometo, ó bendito São Judas Tadeu, nunca esquecer este grande favor, e sempre te honrar como meu poderoso protetor. Amém.'},
+  cura:{title:'Oração de Cura Espiritual',text:'Senhor Jesus Cristo, Tu que passaste fazendo o bem e curando todos os enfermos, dirijo-me a Ti com fé e confiança. Tu conheces minha fraqueza e minha dor. Nada está além do Teu poder e da Tua misericórdia. Vem, Senhor, com a Tua graça curadora, toca meu corpo e minha alma. Liberta-me de toda doença, de toda ferida interior, de toda tristeza e de todo medo. Enche-me do Teu Espírito Santo de força, paz e esperança. Nossa Senhora de Fátima, intercedei por mim junto ao vosso Filho Jesus. Amém.'},
+  dormir:{title:'Oração para Dormir em Paz',text:'Senhor, ao encerrar este dia, venho a Ti com o coração grato por tudo o que recebi. Perdoa-me pelos erros cometidos. Guarda-me durante esta noite. Que o sono que me espera seja reparador, tranquilo e seguro sob a Tua proteção. Afasta de mim todo pesadelo, toda ansiedade e todo temor. Anjo da Guarda, vigia-me durante o repouso. Maria Santíssima, cobre-me com o vosso manto. Que eu acorde amanhã renovado na fé, na esperança e no amor. Amém.'},
+  prosperidade:{title:'Oração para Prosperidade',text:'Senhor Deus, criador de todas as coisas, Tu que alimentas as aves do céu e vestes os lírios do campo, olha com misericórdia para as minhas necessidades. Abençoa o meu trabalho, as minhas mãos e os meus esforços. Que tudo o que eu faça seja para Tua glória e o bem do próximo. Afasta de mim o espírito de escassez e de ganância, e enche o meu coração de confiança em Tua providência. Não me deixes faltar o necessário, e faz que eu seja instrumento de generosidade para os que precisam. Amém.'}
+};
+
+// ============================================================
+// STEPS — bid map:
+// 0=cruz 1=pater_ini 2-4=aves_ini
+// 5=pater1 6-15=aves1 16=pater2 17-26=aves2
+// 27=pater3 28-37=aves3 38=pater4 39-48=aves4
+// 49=pater5 50-59=aves5
+// ============================================================
+function buildSteps(key){
+  const m=MIST[key];const s=[];
+  s.push({type:'intro',m,bid:-1});
+  s.push({type:'prayer',p:PR.credo,    label:'Cruz',         bid:0, img:'credo', showFull:false});
+  s.push({type:'prayer',p:PR.pai_nosso,label:'Pai Nosso',    bid:1, img:'jesus', showFull:false});
+  for(let i=0;i<3;i++) s.push({type:'prayer',p:PR.ave_maria,label:'Ave Maria',bid:2+i,img:'mary',lastAve:false,showFull:false});
+  s.push({type:'prayer',p:PR.gloria,   label:'Glória ao Pai',bid:4, img:'none',  showFull:true});
+  for(let d=0;d<5;d++){
+    const pb=5+d*11,isLast=(d===4);
+    s.push({type:'mystery',m,idx:d,bid:pb});
+    s.push({type:'prayer',p:PR.pai_nosso,label:'Pai Nosso',bid:pb,mIdx:d,img:'jesus',showFull:false});
+    for(let j=0;j<10;j++)
+      s.push({type:'prayer',p:PR.ave_maria,label:'Ave Maria '+(j+1)+'/10',bid:pb+1+j,mIdx:d,img:'mary',lastAve:isLast&&j===9,showFull:false});
+    s.push({type:'prayer',p:PR.gloria, label:'Glória ao Pai',   bid:pb+10,mIdx:d,img:'none',  showFull:true});
+    s.push({type:'prayer',p:PR.fatima, label:'Oração de Fátima',bid:pb+10,mIdx:d,img:'fatima',showFull:true});
+    if(isLast) s.push({type:'prayer',p:PR.salve,label:'Salve Rainha',bid:59,img:'salve',showFull:false});
+  }
+  s.push({type:'complete',m,bid:59});
+  return s;
+}
+
+// ============================================================
+// BEAD GEOMETRY
+// ============================================================
+let BPOS=[],JX=0,JY=0;
+function computeBeads(W,H){
+  BPOS=new Array(60);
+  const cx=W/2,margin=22,rx=W/2-margin;
+  const tailH=H*0.26,ry=(H-tailH)*0.44,cy=(H-tailH)*0.46;
+  JX=cx; JY=cy+ry;
+  // bead5 at junction; beads 5-59 evenly spread 350deg anti-clockwise
+  const total=55,span=350;
+  const step=span/(total-1);
+  for(let i=0;i<total;i++){
+    const deg=90-i*step,rad=deg*Math.PI/180;
+    BPOS[5+i]={x:cx+rx*Math.cos(rad),y:cy+ry*Math.sin(rad),type:[0,11,22,33,44].includes(i)?'pater':'ave'};
+  }
+  BPOS[5]={x:cx,y:JY,type:'pater'};
+  const sp=tailH/5;
+  BPOS[4]={x:cx,y:JY+sp,  type:'ave'};
+  BPOS[3]={x:cx,y:JY+sp*2,type:'ave'};
+  BPOS[2]={x:cx,y:JY+sp*3,type:'ave'};
+  BPOS[1]={x:cx,y:JY+sp*4,type:'pater'};
+  BPOS[0]={x:cx,y:JY+sp*5,type:'cruz'};
+}
+
+// ============================================================
+// SVG IMAGES (no HTML comments inside template literals)
+// ============================================================
+function maryBg(W,H){
+  const iH=Math.min(H*0.55,W*0.7),iW=iH*0.74,ix=(W-iW)/2,iy=H*0.05,s=iW/140;
+  return '<g opacity="0.18" transform="translate('+ix+' '+iy+') scale('+s+')">'
+    +'<rect width="140" height="190" fill="#dce8f5" rx="4"/>'
+    +'<circle cx="70" cy="52" r="26" fill="none" stroke="#e8c84a" stroke-width="1.8" opacity="0.8"/>'
+    +'<g fill="#e8c84a" opacity="0.9"><circle cx="70" cy="26" r="2"/><circle cx="83" cy="29" r="2"/><circle cx="92" cy="38" r="2"/><circle cx="95" cy="52" r="2"/><circle cx="92" cy="66" r="2"/><circle cx="83" cy="75" r="2"/><circle cx="70" cy="78" r="2"/><circle cx="57" cy="75" r="2"/><circle cx="48" cy="66" r="2"/><circle cx="45" cy="52" r="2"/><circle cx="48" cy="38" r="2"/><circle cx="57" cy="29" r="2"/></g>'
+    +'<path d="M35 75 Q20 110 18 145 Q28 160 70 165 Q112 160 122 145 Q120 110 105 75 Q88 68 70 67 Q52 68 35 75Z" fill="#3a6ea8"/>'
+    +'<path d="M52 105 Q50 130 50 165 L90 165 Q90 130 88 105Z" fill="#f0ebe0"/>'
+    +'<ellipse cx="70" cy="75" rx="9" ry="7" fill="#f0c8a0"/>'
+    +'<ellipse cx="70" cy="52" rx="18" ry="20" fill="#f0c8a0"/>'
+    +'<ellipse cx="63" cy="50" rx="3" ry="3.5" fill="white"/><ellipse cx="77" cy="50" rx="3" ry="3.5" fill="white"/>'
+    +'<ellipse cx="63.5" cy="50.5" rx="2" ry="2.5" fill="#3a2818"/><ellipse cx="77.5" cy="50.5" rx="2" ry="2.5" fill="#3a2818"/>'
+    +'<path d="M65 60 Q70 63 75 60" stroke="#b05030" stroke-width="1" fill="none"/>'
+    +'<path d="M52 44 Q50 36 55 30 Q62 24 70 24 Q78 24 85 30 Q90 36 88 44 Q80 38 70 37 Q60 38 52 44Z" fill="#2a5a98"/>'
+    +'<path d="M52 44 Q46 55 42 72 Q36 76 35 75 Q40 65 48 50Z" fill="#2a5a98"/>'
+    +'<path d="M88 44 Q94 55 98 72 Q104 76 105 75 Q100 65 92 50Z" fill="#2a5a98"/>'
+    +'<path d="M58 110 Q65 106 70 106 Q75 106 82 110 Q78 118 70 118 Q62 118 58 110Z" fill="#f0c8a0"/>'
+    +'</g>';
+}
+function jesusBg(W,H){
+  const iH=Math.min(H*0.58,W*0.78),iW=iH*0.78,ix=(W-iW)/2,iy=H*0.03,s=iW/160;
+  return '<g opacity="0.17" transform="translate('+ix+' '+iy+') scale('+s+')">'
+    +'<rect x="72" y="8" width="16" height="145" rx="4" fill="#6b3a1a"/>'
+    +'<rect x="26" y="44" width="108" height="15" rx="4" fill="#6b3a1a"/>'
+    +'<rect x="58" y="4" width="44" height="16" rx="3" fill="#c8a060"/>'
+    +'<text x="80" y="15" text-anchor="middle" font-family="serif" font-size="9" fill="#3a1a00" font-weight="bold">INRI</text>'
+    +'<circle cx="80" cy="37" r="22" fill="none" stroke="#e8c84a" stroke-width="1.8" opacity="0.75"/>'
+    +'<ellipse cx="80" cy="36" rx="15" ry="16" fill="#f0c8a0"/>'
+    +'<path d="M67 30 Q72 23 80 25 Q88 23 94 30 Q89 27 80 29 Q71 27 66 30Z" fill="none" stroke="#5a3010" stroke-width="2.2"/>'
+    +'<path d="M74 51 Q72 82 70 113 Q76 115 80 113 Q84 115 90 113 Q88 82 86 51Z" fill="#f0c8a0"/>'
+    +'<path d="M26 51 Q50 49 74 51" fill="none" stroke="#f0c8a0" stroke-width="9" stroke-linecap="round"/>'
+    +'<path d="M86 51 Q110 49 134 51" fill="none" stroke="#f0c8a0" stroke-width="9" stroke-linecap="round"/>'
+    +'<circle cx="26" cy="51" r="5.5" fill="#f0c8a0"/><circle cx="134" cy="51" r="5.5" fill="#f0c8a0"/>'
+    +'<circle cx="26" cy="51" r="2.5" fill="#8b3a1a"/><circle cx="134" cy="51" r="2.5" fill="#8b3a1a"/>'
+    +'</g>';
+}
+function salveBg(W,H){
+  const iH=Math.min(H*0.55,W*0.7),iW=iH*0.74,ix=(W-iW)/2,iy=H*0.05,s=iW/140;
+  return '<g opacity="0.17" transform="translate('+ix+' '+iy+') scale('+s+')">'
+    +'<rect width="140" height="190" fill="#e8f0f8" rx="4"/>'
+    +'<circle cx="70" cy="48" r="28" fill="none" stroke="#f0e070" stroke-width="1.5" opacity="0.7"/>'
+    +'<g fill="#f0e070" opacity="0.85"><circle cx="70" cy="20" r="2.2"/><circle cx="84" cy="24" r="2.2"/><circle cx="94" cy="34" r="2.2"/><circle cx="97" cy="48" r="2.2"/><circle cx="94" cy="62" r="2.2"/><circle cx="84" cy="72" r="2.2"/><circle cx="70" cy="76" r="2.2"/><circle cx="56" cy="72" r="2.2"/><circle cx="46" cy="62" r="2.2"/><circle cx="43" cy="48" r="2.2"/><circle cx="46" cy="34" r="2.2"/><circle cx="56" cy="24" r="2.2"/></g>'
+    +'<path d="M32 74 Q16 112 14 148 Q24 164 70 168 Q116 164 126 148 Q124 112 108 74 Q89 66 70 65 Q51 66 32 74Z" fill="#c8d8f0"/>'
+    +'<path d="M50 108 Q48 134 48 168 L92 168 Q92 134 90 108Z" fill="#f8f0e8"/>'
+    +'<ellipse cx="70" cy="75" rx="9" ry="7" fill="#f0c8a0"/>'
+    +'<ellipse cx="70" cy="48" rx="17" ry="19" fill="#f4d0a8"/>'
+    +'<path d="M54 42 Q52 34 57 28 Q63 21 70 21 Q77 21 83 28 Q88 34 86 42 Q78 35 70 34 Q62 35 54 42Z" fill="#e0eaf8"/>'
+    +'<path d="M54 42 Q46 55 42 73 Q36 77 32 74 Q38 64 47 50Z" fill="#e0eaf8"/>'
+    +'<path d="M88 42 Q94 55 98 73 Q104 77 108 74 Q102 64 93 50Z" fill="#e0eaf8"/>'
+    +'<path d="M57 108 Q64 104 70 104 Q76 104 83 108 Q79 116 70 116 Q61 116 57 108Z" fill="#f0c8a0"/>'
+    +'</g>';
+}
+function fatimaBg(W,H){
+  const iH=Math.min(H*0.55,W*0.7),iW=iH*0.74,ix=(W-iW)/2,iy=H*0.05,s=iW/140;
+  return '<g opacity="0.17" transform="translate('+ix+' '+iy+') scale('+s+')">'
+    +'<rect width="140" height="190" fill="#fff8e8" rx="4"/>'
+    +'<circle cx="70" cy="46" r="30" fill="#f5e870" opacity="0.25"/>'
+    +'<circle cx="70" cy="46" r="24" fill="none" stroke="#e8c840" stroke-width="1.5" opacity="0.8"/>'
+    +'<g fill="#e8c840" opacity="0.9"><circle cx="70" cy="22" r="2.2"/><circle cx="84" cy="25" r="2.2"/><circle cx="93" cy="34" r="2.2"/><circle cx="96" cy="46" r="2.2"/><circle cx="93" cy="58" r="2.2"/><circle cx="84" cy="67" r="2.2"/><circle cx="70" cy="70" r="2.2"/><circle cx="56" cy="67" r="2.2"/><circle cx="47" cy="58" r="2.2"/><circle cx="44" cy="46" r="2.2"/><circle cx="47" cy="34" r="2.2"/><circle cx="56" cy="25" r="2.2"/></g>'
+    +'<path d="M30 70 Q14 108 12 146 Q22 162 70 167 Q118 162 128 146 Q126 108 110 70 Q90 62 70 61 Q50 62 30 70Z" fill="#c8d8a0"/>'
+    +'<path d="M50 104 Q48 130 48 167 L92 167 Q92 130 90 104Z" fill="#f8f0d8"/>'
+    +'<ellipse cx="70" cy="72" rx="9" ry="7" fill="#f0c8a0"/>'
+    +'<ellipse cx="70" cy="46" rx="17" ry="19" fill="#f4d0a8"/>'
+    +'<path d="M53 40 Q51 32 56 26 Q63 19 70 19 Q77 19 84 26 Q89 32 87 40 Q79 33 70 32 Q61 33 53 40Z" fill="#e8dcc0"/>'
+    +'<path d="M53 40 Q45 53 41 71 Q35 75 30 70 Q36 62 46 48Z" fill="#e8dcc0"/>'
+    +'<path d="M87 40 Q95 53 99 71 Q105 75 110 70 Q104 62 94 48Z" fill="#e8dcc0"/>'
+    +'<path d="M57 108 Q64 104 70 104 Q76 104 83 108 Q79 116 70 116 Q61 116 57 108Z" fill="#f0c8a0"/>'
+    +'</g>';
+}
+
+// ============================================================
+// DRAW ROSARY
+// ============================================================
+function drawRosary(W,H,activeBid,imgType){
+  const svg=document.getElementById('rosary-svg');
+  if(!svg||W<10||H<10)return;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('width',W);svg.setAttribute('height',H);
+  computeBeads(W,H);
+  const cx=W/2,margin=22,rx=W/2-margin;
+  const tailH=H*0.26,ry=(H-tailH)*0.44,cy=(H-tailH)*0.46;
+  const jx=JX,jy=JY;
+  let h='';
+
+  if(imgType==='mary')  h+=maryBg(W,H);
+  else if(imgType==='jesus'||imgType==='credo') h+=jesusBg(W,H);
+  else if(imgType==='fatima') h+=fatimaBg(W,H);
+  else if(imgType==='salve')  h+=salveBg(W,H);
+
+  function isV(bid){return activeBid>=0&&bid<activeBid;}
+  const cC='rgba(181,135,58,0.38)',cD='rgba(110,35,8,0.75)';
+  function L(x1,y1,x2,y2,done){return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+(done?cD:cC)+'" stroke-width="1.8" stroke-linecap="round"/>';}
+
+  const b5=BPOS[5];
+  h+=L(b5.x,b5.y,BPOS[4].x,BPOS[4].y,isV(4));
+  h+=L(BPOS[4].x,BPOS[4].y,BPOS[3].x,BPOS[3].y,isV(3));
+  h+=L(BPOS[3].x,BPOS[3].y,BPOS[2].x,BPOS[2].y,isV(2));
+  h+=L(BPOS[2].x,BPOS[2].y,BPOS[1].x,BPOS[1].y,isV(1));
+  h+=L(BPOS[1].x,BPOS[1].y,BPOS[0].x,BPOS[0].y,isV(0));
+  h+=L(b5.x,b5.y,BPOS[6].x,BPOS[6].y,activeBid>=6);
+  for(let i=6;i<59;i++) h+=L(BPOS[i].x,BPOS[i].y,BPOS[i+1].x,BPOS[i+1].y,i+1<=activeBid);
+  h+=L(BPOS[59].x,BPOS[59].y,b5.x,b5.y,false);
+
+  // TEXT
+  const step=ST.steps[ST.si];
+  let tTxt='',bTxt='';
+  if(step){
+    if(step.type==='intro'){tTxt='BEM-VINDO';bTxt='Prepare o coração com fé e devoção.';}
+    else if(step.type==='mystery'){tTxt=(step.idx+1)+'º MISTÉRIO';bTxt=step.m.lista[step.idx];}
+    else if(step.type==='prayer'){tTxt=step.p.title.toUpperCase();bTxt=step.showFull?step.p.full:'';}
+  }
+  const tCx=cx,tCy=cy,tRx=rx*0.8,tRy=ry*0.8;
+  const tFs=Math.max(13,Math.min(W*0.046,22));
+  const tY=tCy-tRy*0.55;
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function dk(){return window.matchMedia('(prefers-color-scheme:dark)').matches;}
+  const ftc=dk()?'#f0dfc0':'#2a1008';
+  if(tTxt) h+='<text x="'+tCx+'" y="'+tY+'" text-anchor="middle" font-family="Cinzel,serif" font-size="'+tFs+'px" font-weight="600" fill="#b5873a" letter-spacing="2">'+esc(tTxt)+'</text>';
+  if(bTxt){
+    const bFs=Math.max(13,Math.min(W*0.044,19));
+    const bLH=bFs*1.88,cpl=Math.floor(tRx*1.75/(bFs*0.51));
+    const lines=wrapTxt(bTxt,cpl);
+    const totH=lines.length*bLH;
+    let sy=Math.max(tCy-totH/2+bLH*0.5,tY+tFs*1.4);
+    for(let i=0;i<lines.length;i++){
+      const ly=sy+i*bLH;
+      if(ly>tCy+tRy*0.58)break;
+      h+='<text x="'+tCx+'" y="'+ly+'" text-anchor="middle" font-family="EB Garamond,Georgia,serif" font-size="'+bFs+'px" fill="'+ftc+'" font-style="italic">'+esc(lines[i])+'</text>';
+    }
+  } else if(step&&step.type==='prayer'){
+    const symY=tCy+tFs*0.4,symFs=Math.max(28,W*0.12);
+    const sym=(imgType==='mary'||imgType==='salve')?'✿':'✝';
+    h+='<text x="'+tCx+'" y="'+symY+'" text-anchor="middle" font-size="'+symFs+'px" fill="rgba(181,135,58,0.15)">'+sym+'</text>';
+  }
+
+
+  // BEADS
+  for(let i=0;i<60;i++){
+    const b=BPOS[i];if(!b)continue;
+    const isAct=i===activeBid,isDone=!isAct&&isV(i);
+    const isP=b.type==='pater',isC=b.type==='cruz';
+    if(isC){
+      const col=isAct?'#e8c84a':isDone?'#7a2a0a':'#c09040';
+      const vH=Math.max(22,W*0.058),hW=Math.max(14,W*0.038),tk=Math.max(4,W*0.011);
+      const vT=b.y-vH*0.62,vB=b.y+vH*0.38,hY=b.y-vH*0.22,t2=tk/2,bx=b.x;
+      if(isAct)h+='<circle cx="'+bx+'" cy="'+b.y+'" r="'+(vH*0.7)+'" fill="rgba(232,200,74,0.22)"/>';
+      h+='<path d="M'+(bx-t2)+' '+vT+' L'+(bx+t2)+' '+vT+' L'+(bx+t2)+' '+(hY-t2)+' L'+(bx+hW/2)+' '+(hY-t2)+' L'+(bx+hW/2)+' '+(hY+t2)+' L'+(bx+t2)+' '+(hY+t2)+' L'+(bx+t2)+' '+vB+' L'+(bx-t2)+' '+vB+' L'+(bx-t2)+' '+(hY+t2)+' L'+(bx-hW/2)+' '+(hY+t2)+' L'+(bx-hW/2)+' '+(hY-t2)+' L'+(bx-t2)+' '+(hY-t2)+' Z" fill="'+col+'" cursor="pointer" onclick="showBeadPopup(0)"/>';
+    } else {
+      const r=isP?Math.max(8,W*0.022):Math.max(5.5,W*0.015);
+      let fill,stroke,sw;
+      if(isAct){fill='#e8c84a';stroke='rgba(255,255,255,0.9)';sw=1.5;}
+      else if(isDone){fill=isP?'#1a3a6a':'#7a2a0a';stroke='rgba(255,255,255,0.2)';sw=0.5;}
+      else{fill=isP?'#4a7ab0':'#c9a96e';stroke='rgba(255,255,255,0.15)';sw=0.5;}
+      if(isAct)h+='<circle cx="'+b.x.toFixed(1)+'" cy="'+b.y.toFixed(1)+'" r="'+(r+7)+'" fill="rgba(232,200,74,0.25)"/>';
+      h+='<circle cx="'+b.x.toFixed(1)+'" cy="'+b.y.toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'" cursor="pointer" onclick="showBeadPopup('+i+')"/>';
+      h+='<circle cx="'+(b.x-r*0.25).toFixed(1)+'" cy="'+(b.y-r*0.28).toFixed(1)+'" r="'+(r*0.28).toFixed(1)+'" fill="rgba(255,255,255,0.35)"/>';
+    }
+  }
+  // Decade numbers
+  [5,16,27,38,49].forEach(function(pb,d){
+    const b=BPOS[pb];if(!b)return;
+    const dx=b.x-cx,dy=b.y-cy,dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const lFs=Math.max(8,W*0.022);
+    h+='<text x="'+(b.x+dx/dist*14).toFixed(1)+'" y="'+(b.y+dy/dist*12+4).toFixed(1)+'" text-anchor="middle" font-family="Cinzel,serif" font-size="'+lFs+'px" fill="rgba(181,135,58,0.65)">'+(d+1)+'</text>';
+  });
+
+  svg.innerHTML=h;
+}
+function wrapTxt(text,cpl){
+  const words=text.split(' ');const lines=[];let cur='';
+  for(const w of words){if((cur+' '+w).trim().length>cpl){lines.push(cur.trim());cur=w;}else cur=(cur+' '+w).trim();}
+  if(cur)lines.push(cur);return lines;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+const ST={screen:'choose',key:null,steps:[],si:0,speaking:false,speed:0.85,notifEnabled:false,notifTime:'07:00',history:JSON.parse(localStorage.getItem('th')||'[]')};
+function getDayKey(){const d=new Date().getDay();if(d===0||d===3)return'gloriosos';if(d===1||d===6)return'gozosos';if(d===2||d===5)return'dolorosos';return'luminosos';}
+
+// ============================================================
+// SPEECH
+// ============================================================
+let utt=null;
+function speak(txt){
+  if(!('speechSynthesis'in window))return;
+  window.speechSynthesis.cancel();
+  utt=new SpeechSynthesisUtterance(txt);
+  utt.lang='pt-BR';utt.rate=ST.speed;utt.pitch=1;utt.volume=1;
+  const pv=window.speechSynthesis.getVoices().find(function(v){return v.lang.startsWith('pt');});
+  if(pv)utt.voice=pv;
+  utt.onstart=function(){ST.speaking=true;updAudio();};
+  utt.onend=function(){ST.speaking=false;updAudio();};
+  utt.onerror=function(){ST.speaking=false;updAudio();};
+  window.speechSynthesis.speak(utt);
+}
+function stopSpeech(){try{window.speechSynthesis.cancel();}catch(e){}ST.speaking=false;updAudio();}
+function updAudio(){
+  const b=document.getElementById('aud-btn');
+  if(b)b.textContent=ST.speaking?'⏹ Parar':'▶ Ouvir';
+}
+function toggleAudio(){
+  if(ST.speaking){stopSpeech();return;}
+  const step=ST.steps[ST.si];
+  if(!step)return;
+  let txt='';
+  if(step.type==='prayer') txt=step.p.title+'. '+step.p.full;
+  else if(step.type==='mystery') txt=step.m.lista[step.idx];
+  else if(step.type==='intro') txt='Vamos rezar os '+step.m.nome;
+  if(txt)speak(txt);
+}
+function chgSpeed(){
+  const sp=[0.7,0.85,1.0,1.2];ST.speed=sp[(sp.indexOf(ST.speed)+1)%sp.length];
+  const b=document.getElementById('spd-btn');if(b)b.textContent=ST.speed+'x';
+}
+function vibrateLastAve(){if('vibrate'in navigator)navigator.vibrate([200,100,200,100,400]);}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function reqNotif(cb){if(!('Notification'in window)){alert('Notificações não suportadas.');return;}Notification.requestPermission().then(function(p){if(p==='granted')cb();else alert('Permissão negada.');});}
+function saveNotif(){localStorage.setItem('tn',JSON.stringify({enabled:ST.notifEnabled,time:ST.notifTime}));}
+setInterval(function(){
+  const d=JSON.parse(localStorage.getItem('tn')||'{}');
+  if(!d.enabled||Notification.permission!=='granted')return;
+  const n=new Date(),parts=(d.time||'07:00').split(':'),h=+parts[0],m=+parts[1];
+  const td=n.toDateString();
+  if(localStorage.getItem('tnl')===td)return;
+  if(n.getHours()===h&&n.getMinutes()===m){new Notification('🙏 O Terço',{body:'Hora de rezar o Terço de Nossa Senhora.',icon:'icons/icon-192.png'});localStorage.setItem('tnl',td);}
+},60000);
+function saveHistory(key){
+  const n=new Date();
+  ST.history.unshift({date:n.toLocaleDateString('pt-BR'),time:n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),m:MIST[key].nome});
+  if(ST.history.length>10)ST.history=ST.history.slice(0,10);
+  localStorage.setItem('th',JSON.stringify(ST.history));
+}
+
+// ============================================================
+// BEAD POPUP
+// ============================================================
+function beadPopupContent(bid){
+  if(bid===0)  return{title:'CRUZ — CREIO EM DEUS',text:PR.credo.full.substring(0,100)+'…'};
+  if(bid===1)  return{title:'PAI NOSSO',text:PR.pai_nosso.full.substring(0,100)+'…'};
+  if(bid>=2&&bid<=4) return{title:'AVE MARIA '+(bid-1)+'ª',text:PR.ave_maria.full.substring(0,100)+'…'};
+  if(bid===59) return{title:'AVE MARIA / GLÓRIA / FÁTIMA / SALVE',text:'Última conta: Ave Maria, Glória ao Pai, Oração de Fátima e Salve Rainha.'};
+  const ps=[5,16,27,38,49];
+  for(let d=0;d<5;d++){
+    const pb=ps[d];
+    if(bid===pb)return{title:(d+1)+'º MISTÉRIO — PAI NOSSO',text:PR.pai_nosso.full.substring(0,100)+'…'};
+    if(bid>pb&&bid<=pb+10)return{title:(d+1)+'º MISTÉRIO — AVE MARIA '+(bid-pb)+'/10',text:PR.ave_maria.full.substring(0,100)+'…'};
+  }
+  return{title:'',text:''};
+}
+function showBeadPopup(bid){
+  const c=beadPopupContent(bid);if(!c.title)return;
+  document.getElementById('pop-title').textContent=c.title;
+  document.getElementById('pop-text').textContent=c.text;
+  document.getElementById('bead-popup').style.display='block';
+  setTimeout(closePopup,6000);
+}
+function closePopup(){document.getElementById('bead-popup').style.display='none';}
+
+// ============================================================
+// RENDER
+// ============================================================
+function getImg(){if(ST.screen!=='praying'||!ST.steps.length)return'none';return ST.steps[ST.si]?ST.steps[ST.si].img||'none':'none';}
+function render(){
+  stopSpeech();
+  const step=ST.steps[ST.si];
+  const bid=step?step.bid:-1;
+
+  document.getElementById('choose-screen').style.display  =ST.screen==='choose' ?'block':'none';
+  document.getElementById('rosary-wrap').style.display    =ST.screen==='praying'?'block':'none';
+  document.getElementById('complete-screen').style.display=ST.screen==='complete'?'flex':'none';
+  document.getElementById('progress-wrap').style.display  =ST.screen==='praying'?'block':'none';
+
+  const bb=document.getElementById('bottombar');
+  bb.innerHTML='';
+  if(ST.screen==='praying'){
+    bb.style.display='flex';
+    // Audio row
+    const ar=document.createElement('div');ar.id='audio-row';
+    const ab=document.createElement('button');ab.id='aud-btn';ab.textContent='▶ Ouvir';ab.onclick=toggleAudio;
+    const sb=document.createElement('button');sb.id='spd-btn';sb.textContent=ST.speed+'x';sb.onclick=chgSpeed;
+    ar.appendChild(ab);ar.appendChild(sb);bb.appendChild(ar);
+    // Nav row
+    const nr=document.createElement('div');nr.id='nav-row';
+    if(ST.si>0){const bp=document.createElement('button');bp.textContent='← Anterior';bp.onclick=prevStep;nr.appendChild(bp);}
+    const bn=document.createElement('button');bn.className='primary';
+    bn.textContent=ST.si<ST.steps.length-1?'Próxima →':'Concluir ✝';
+    bn.onclick=nextStep;nr.appendChild(bn);bb.appendChild(nr);
+  } else if(ST.screen==='complete'){
+    bb.style.display='flex';
+    const nr=document.createElement('div');nr.id='nav-row';
+    const br=document.createElement('button');br.className='primary';br.textContent='Rezar Novamente';br.onclick=goChoose;nr.appendChild(br);bb.appendChild(nr);
+  } else {bb.style.display='none';}
+
+  if(ST.screen==='choose'){renderChoose();return;}
+  if(ST.screen==='complete'){renderComplete();return;}
+
+  // Progress
+  const total=ST.steps.length-1,pct=Math.round((ST.si/total)*100);
+  const m=MIST[ST.key];
+  document.getElementById('pm-name').textContent=m.nome;
+  document.getElementById('pm-pct').textContent=pct+'% concluído';
+  document.getElementById('progress-fill').style.width=pct+'%';
+  // Bead label
+  let bl='';
+  if(bid===0)bl='✝ Cruz — Creio em Deus';
+  else if(bid===1)bl='Pai Nosso (início)';
+  else if(bid>=2&&bid<=4)bl='Ave Maria '+( bid-1)+'ª';
+  else if(bid===59)bl='5º Mistério — última conta';
+  else{const ps=[5,16,27,38,49];for(let d=0;d<5;d++){const pb=ps[d];if(bid===pb){bl=(d+1)+'º Mistério — Pai Nosso';break;}if(bid>pb&&bid<=pb+10){bl=(d+1)+'º Mistério — Ave Maria '+(bid-pb)+'/10';break;}}}
+  document.getElementById('bead-label').textContent=bl?'📿 '+bl:'';
+
+  requestAnimationFrame(function(){
+    const wrap=document.getElementById('rosary-wrap');
+    drawRosary(wrap.clientWidth,wrap.clientHeight,bid,getImg());
+  });
+}
+
+function renderChoose(){
+  const suggested=getDayKey();
+  const nd=JSON.parse(localStorage.getItem('tn')||'{}');
+  ST.notifEnabled=nd.enabled||false;ST.notifTime=nd.time||'07:00';
+  let hist='';
+  if(ST.history.length>0){
+    hist='<div class="divider">✦ histórico ✦</div><ul class="history-list">';
+    ST.history.slice(0,4).forEach(function(hh){hist+='<li>✝ '+hh.date+' às '+hh.time+' — '+hh.m+'</li>';});
+    hist+='</ul>';
+  }
+  const keys=Object.keys(MIST);
+  let cards='';
+  keys.forEach(function(k){
+    const mm=MIST[k];
+    cards+='<div class="mystery-card'+(k===suggested?' selected':'')+'" onclick="startTerco(\''+k+'\')">'
+      +'<div class="mc-icon">'+mm.icon+'</div>'
+      +'<div class="mc-name">'+mm.nome.replace('Mistérios ','')+'</div>'
+      +'<div class="mc-days">'+mm.dias+'</div>'
+      +(k===suggested?'<div class="mc-today">✦ hoje ✦</div>':'')
+      +'</div>';
+  });
+  document.getElementById('choose-screen').innerHTML=
+    '<p class="choose-intro">Bem-vindo ao Santo Terço.<br>Escolha os mistérios de hoje:</p>'
+    +'<div class="mystery-grid">'+cards+'</div>'
+    +'<button onclick="startTerco(\''+suggested+'\')" style="width:100%;font-family:Cinzel,serif;font-size:16px;letter-spacing:1px;padding:14px;border-radius:12px;border:2px solid var(--gold);background:var(--gold);color:#fff;cursor:pointer;margin-bottom:9px">Rezar os '+MIST[suggested].nome+'</button>'
+    +'<div class="notif-row"><div class="notif-label">Lembrete diário<small>Aviso para rezar</small></div>'
+    +'<label class="toggle"><input type="checkbox" id="ntog" '+(ST.notifEnabled?'checked':'')+' onchange="togNotif(this)"><span class="toggle-slider"></span></label></div>'
+    +'<div class="time-row" id="trow" style="'+(ST.notifEnabled?'':'opacity:.4;pointer-events:none')+'">'
+    +'<label>Horário</label><input type="time" value="'+ST.notifTime+'" onchange="ST.notifTime=this.value;saveNotif()"/></div>'
+    +hist+'<div style="height:12px"></div>';
+}
+function renderComplete(){
+  document.getElementById('complete-text').innerHTML='Você rezou os <em style="color:var(--gold)">'+MIST[ST.key].nome+'</em>.<br><br>Que Nossa Senhora interceda por você e sua família.<br>Amém. 🌹';
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+function startTerco(key){ST.key=key;ST.steps=buildSteps(key);ST.si=0;ST.screen='praying';render();window.scrollTo(0,0);}
+function nextStep(){
+  stopSpeech();if(ST.si>=ST.steps.length-1)return;ST.si++;
+  const step=ST.steps[ST.si];
+  if(step.type==='complete'){ST.screen='complete';saveHistory(ST.key);}
+  if(step.lastAve)vibrateLastAve();
+  render();window.scrollTo(0,0);
+}
+function prevStep(){stopSpeech();if(ST.si>0){ST.si--;render();window.scrollTo(0,0);}}
+function goChoose(){ST.screen='choose';ST.si=0;render();window.scrollTo(0,0);}
+function togNotif(el){
+  if(el.checked){reqNotif(function(){ST.notifEnabled=true;saveNotif();document.getElementById('trow').style.cssText='';});}
+  else{ST.notifEnabled=false;saveNotif();document.getElementById('trow').style.cssText='opacity:.4;pointer-events:none';}
+}
+
+// ============================================================
+// MENU
+// ============================================================
+function toggleMenu(){
+  const open=document.getElementById('menu-drawer').classList.contains('open');
+  if(open)closeMenu();else openMenu();
+}
+function openMenu(){
+  document.getElementById('menu-btn').classList.add('open');
+  document.getElementById('menu-drawer').classList.add('open');
+  document.getElementById('menu-overlay').style.display='block';
+}
+function closeMenu(){
+  document.getElementById('menu-btn').classList.remove('open');
+  document.getElementById('menu-drawer').classList.remove('open');
+  document.getElementById('menu-overlay').style.display='none';
+}
+
+// ============================================================
+// PRAYER MODAL
+// ============================================================
+let mUtt=null,mSpeed=0.85;
+function openPrayer(key){
+  closeMenu();
+  const p=PRAYERSDB[key];if(!p)return;
+  document.getElementById('ps-title').textContent=p.title.toUpperCase();
+  document.getElementById('ps-text').textContent=p.text;
+  document.getElementById('ps-play').textContent='▶ Ouvir';
+  document.getElementById('ps-spd').textContent=mSpeed+'x';
+  document.getElementById('prayer-modal').style.display='flex';
+}
+function closePrayer(){
+  try{if(mUtt)window.speechSynthesis.cancel();}catch(e){}mUtt=null;
+  document.getElementById('prayer-modal').style.display='none';
+  document.getElementById('ps-play').textContent='▶ Ouvir';
+}
+function toggleModalAudio(){
+  if(mUtt&&window.speechSynthesis.speaking){window.speechSynthesis.cancel();mUtt=null;document.getElementById('ps-play').textContent='▶ Ouvir';return;}
+  const txt=document.getElementById('ps-text').textContent;if(!txt)return;
+  mUtt=new SpeechSynthesisUtterance(txt);mUtt.lang='pt-BR';mUtt.rate=mSpeed;
+  const pv=window.speechSynthesis.getVoices().find(function(v){return v.lang.startsWith('pt');});
+  if(pv)mUtt.voice=pv;
+  mUtt.onstart=function(){document.getElementById('ps-play').textContent='⏹ Parar';};
+  mUtt.onend=mUtt.onerror=function(){mUtt=null;document.getElementById('ps-play').textContent='▶ Ouvir';};
+  window.speechSynthesis.speak(mUtt);
+}
+function chgModalSpd(){
+  const sp=[0.7,0.85,1.0,1.2];mSpeed=sp[(sp.indexOf(mSpeed)+1)%sp.length];
+  document.getElementById('ps-spd').textContent=mSpeed+'x';
+}
+
+// ============================================================
+// RESIZE
+// ============================================================
+let rsz;
+window.addEventListener('resize',function(){
+  clearTimeout(rsz);rsz=setTimeout(function(){
+    if(ST.screen==='praying'){
+      const w=document.getElementById('rosary-wrap');
+      drawRosary(w.clientWidth,w.clientHeight,ST.steps[ST.si]?ST.steps[ST.si].bid:-1,getImg());
+    }
+  },100);
+});
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('menu-btn').addEventListener('click',toggleMenu);
+  document.getElementById('menu-close').addEventListener('click',closeMenu);
+  document.getElementById('menu-overlay').addEventListener('click',closeMenu);
+  document.getElementById('ps-close').addEventListener('click',closePrayer);
+  document.getElementById('ps-play').addEventListener('click',toggleModalAudio);
+  document.getElementById('ps-spd').addEventListener('click',chgModalSpd);
+  document.getElementById('prayer-modal').addEventListener('click',function(e){if(e.target===this)closePrayer();});
+  document.getElementById('install-btn')&&document.getElementById('install-btn').addEventListener('click',function(){if(!dp)return;dp.prompt();dp=null;document.getElementById('install-banner').style.display='none';});
+  document.getElementById('dismiss-btn')&&document.getElementById('dismiss-btn').addEventListener('click',function(){document.getElementById('install-banner').style.display='none';});
+  if('speechSynthesis'in window){window.speechSynthesis.getVoices();window.speechSynthesis.onvoiceschanged=function(){window.speechSynthesis.getVoices();};}
+  render();
+  if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(function(){});
+});
+let dp=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;document.getElementById('install-banner').style.display='flex';});
+</script>
+</body>
+</html>
